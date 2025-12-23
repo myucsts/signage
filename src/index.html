@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Personal Info Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;600&family=Oxanium:wght@400;600&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              ui: ["IBM Plex Sans", "sans-serif"],
+              display: ["Oxanium", "sans-serif"],
+            },
+            colors: {
+              panel: "#0a0a0a",
+              panelBorder: "#1f1f1f",
+              accent: "#20c997",
+              dim: "#9aa0a6",
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="bg-black text-white font-ui min-h-screen">
+    <div class="max-w-6xl mx-auto p-4 md:p-6">
+      <header class="mb-4 md:mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-panel border border-panelBorder rounded-2xl p-5 flex items-center justify-between">
+            <div>
+              <p class="text-dim text-sm uppercase tracking-widest">Now</p>
+              <p id="date" class="text-lg md:text-xl"></p>
+            </div>
+            <div class="text-right">
+              <p id="time" class="font-display text-4xl md:text-6xl tracking-wider"></p>
+              <p id="timezone" class="text-dim text-sm"></p>
+            </div>
+          </div>
+          <div class="bg-panel border border-panelBorder rounded-2xl p-5">
+            <p class="text-dim text-sm uppercase tracking-widest">System</p>
+            <div class="mt-2 grid grid-cols-2 gap-3 text-sm">
+              <div class="bg-black/60 rounded-xl p-3">
+                <p class="text-dim">Last Weather Update</p>
+                <p id="weather-updated" class="font-display text-lg">--:--</p>
+              </div>
+              <div class="bg-black/60 rounded-xl p-3">
+                <p class="text-dim">Last News Update</p>
+                <p id="news-updated" class="font-display text-lg">--:--</p>
+              </div>
+              <div class="bg-black/60 rounded-xl p-3">
+                <p class="text-dim">Last Quake Update</p>
+                <p id="quake-updated" class="font-display text-lg">--:--</p>
+              </div>
+              <div class="bg-black/60 rounded-xl p-3">
+                <p class="text-dim">Location</p>
+                <p id="location" class="text-sm">Tokyo</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+        <section class="lg:col-span-2 bg-panel border border-panelBorder rounded-2xl p-5">
+          <div class="flex items-center justify-between">
+            <h2 class="font-display text-2xl">Weather</h2>
+            <span class="text-dim text-sm">Open-Meteo</span>
+          </div>
+          <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-black/60 rounded-xl p-4 flex items-center justify-between">
+              <div>
+                <p class="text-dim text-sm">Current</p>
+                <div class="flex items-center gap-3">
+                  <span id="weather-icon" class="text-4xl">--</span>
+                  <div>
+                    <p id="weather-temp" class="font-display text-4xl">--°C</p>
+                    <p id="weather-desc" class="text-dim text-sm">--</p>
+                  </div>
+                </div>
+              </div>
+              <div class="text-right text-sm">
+                <p class="text-dim">Wind</p>
+                <p id="weather-wind" class="font-display text-xl">-- km/h</p>
+              </div>
+            </div>
+            <div class="bg-black/60 rounded-xl p-4">
+              <p class="text-dim text-sm">Next 12 Hours (3h)</p>
+              <div id="forecast" class="mt-3 grid grid-cols-2 gap-3 text-sm"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="bg-panel border border-panelBorder rounded-2xl p-5">
+          <div class="flex items-center justify-between">
+            <h2 class="font-display text-2xl">Earthquake</h2>
+            <span class="text-dim text-sm">P2P</span>
+          </div>
+          <div id="quake-list" class="mt-4 space-y-3 text-sm"></div>
+        </section>
+
+        <section class="lg:col-span-3 bg-panel border border-panelBorder rounded-2xl p-5">
+          <div class="flex items-center justify-between">
+            <h2 class="font-display text-2xl">News</h2>
+            <span class="text-dim text-sm">NHK Feed</span>
+          </div>
+          <div id="news-list" class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const LOCATION = {
+        // 天気の取得座標（変更可能）
+        name: "Tokyo",
+        latitude: 35.6895,
+        longitude: 139.6917,
+      };
+
+      const WEATHER_ENDPOINT = (lat, lon) =>
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m&hourly=temperature_2m,precipitation_probability,weather_code&timezone=Asia%2FTokyo`;
+
+      const QUAKE_ENDPOINT = "https://api.p2pquake.net/v2/history?codes=551&limit=3";
+
+      const NHK_RSS =
+        "https://www.nhk.or.jp/rss/news/cat0.xml";
+      const RSS2JSON =
+        (rssUrl) => `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
+
+      const weatherIcons = {
+        0: { icon: "☀️", label: "Clear" },
+        1: { icon: "🌤️", label: "Mostly Clear" },
+        2: { icon: "⛅", label: "Partly Cloudy" },
+        3: { icon: "☁️", label: "Overcast" },
+        45: { icon: "🌫️", label: "Fog" },
+        48: { icon: "🌫️", label: "Rime Fog" },
+        51: { icon: "🌦️", label: "Drizzle" },
+        53: { icon: "🌦️", label: "Drizzle" },
+        55: { icon: "🌧️", label: "Heavy Drizzle" },
+        61: { icon: "🌧️", label: "Rain" },
+        63: { icon: "🌧️", label: "Rain" },
+        65: { icon: "🌧️", label: "Heavy Rain" },
+        71: { icon: "❄️", label: "Snow" },
+        73: { icon: "❄️", label: "Snow" },
+        75: { icon: "❄️", label: "Heavy Snow" },
+        80: { icon: "🌦️", label: "Showers" },
+        81: { icon: "🌦️", label: "Showers" },
+        82: { icon: "🌦️", label: "Heavy Showers" },
+        95: { icon: "⛈️", label: "Thunderstorm" },
+        96: { icon: "⛈️", label: "Thunderstorm" },
+        99: { icon: "⛈️", label: "Thunderstorm" },
+      };
+
+      const fallbackNews = [
+        {
+          title: "デモ: 速報ニュースの見出し",
+          description: "RSS取得に失敗した場合のフォールバック表示です。",
+          pubDate: new Date().toISOString(),
+          link: "https://www.nhk.or.jp/",
+        },
+        {
+          title: "デモ: ダッシュボード向けの見出し",
+          description: "カード形式のニュース表示を想定しています。",
+          pubDate: new Date().toISOString(),
+          link: "https://www.nhk.or.jp/",
+        },
+        {
+          title: "デモ: 天気や地震と連動",
+          description: "必要に応じて別のRSSに差し替え可能です。",
+          pubDate: new Date().toISOString(),
+          link: "https://www.nhk.or.jp/",
+        },
+      ];
+
+      const timeEl = document.getElementById("time");
+      const dateEl = document.getElementById("date");
+      const timezoneEl = document.getElementById("timezone");
+      const locationEl = document.getElementById("location");
+      const weatherUpdatedEl = document.getElementById("weather-updated");
+      const newsUpdatedEl = document.getElementById("news-updated");
+      const quakeUpdatedEl = document.getElementById("quake-updated");
+
+      const weatherIconEl = document.getElementById("weather-icon");
+      const weatherTempEl = document.getElementById("weather-temp");
+      const weatherDescEl = document.getElementById("weather-desc");
+      const weatherWindEl = document.getElementById("weather-wind");
+      const forecastEl = document.getElementById("forecast");
+
+      const quakeListEl = document.getElementById("quake-list");
+      const newsListEl = document.getElementById("news-list");
+
+      function formatDateTime(date) {
+        return new Intl.DateTimeFormat("ja-JP", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          weekday: "short",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        }).format(date);
+      }
+
+      function updateClock() {
+        const now = new Date();
+        const time = new Intl.DateTimeFormat("ja-JP", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        }).format(now);
+        const weekday = new Intl.DateTimeFormat("ja-JP", {
+          weekday: "short",
+        }).format(now);
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const day = String(now.getDate()).padStart(2, "0");
+        const date = `${year}年${month}月${day}日 (${weekday})`;
+
+        timeEl.textContent = time;
+        dateEl.textContent = date;
+        timezoneEl.textContent = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      }
+
+      function toLocalTimeLabel(isoString) {
+        const date = new Date(isoString);
+        return new Intl.DateTimeFormat("ja-JP", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }).format(date);
+      }
+
+      function mapWeather(code) {
+        return weatherIcons[code] || { icon: "❔", label: "Unknown" };
+      }
+
+      async function fetchWeather() {
+        try {
+          // Open-Meteo から天気を取得
+          const response = await fetch(WEATHER_ENDPOINT(LOCATION.latitude, LOCATION.longitude));
+          if (!response.ok) throw new Error("Weather fetch failed");
+          const data = await response.json();
+
+          const current = data.current;
+          const mapped = mapWeather(current.weather_code);
+          weatherIconEl.textContent = mapped.icon;
+          weatherTempEl.textContent = `${Math.round(current.temperature_2m)}°C`;
+          weatherDescEl.textContent = mapped.label;
+          weatherWindEl.textContent = `${Math.round(current.wind_speed_10m)} km/h`;
+
+          forecastEl.innerHTML = "";
+          const times = data.hourly.time;
+          const temps = data.hourly.temperature_2m;
+          const codes = data.hourly.weather_code;
+          const pops = data.hourly.precipitation_probability;
+
+          for (let i = 0; i < times.length && forecastEl.children.length < 4; i += 3) {
+            const item = document.createElement("div");
+            const w = mapWeather(codes[i]);
+            const pop = pops ? `${pops[i]}%` : "--";
+            item.className = "flex items-center justify-between bg-black/40 rounded-lg px-3 py-2";
+            item.innerHTML = `
+              <div>
+                <p class="text-dim text-xs">${toLocalTimeLabel(times[i])}</p>
+                <p class="text-lg">${w.icon}</p>
+              </div>
+              <div class="text-right">
+                <p class="font-display text-lg">${Math.round(temps[i])}°</p>
+                <p class="text-dim text-xs">POP ${pop}</p>
+              </div>
+            `;
+            forecastEl.appendChild(item);
+          }
+
+          weatherUpdatedEl.textContent = new Intl.DateTimeFormat("ja-JP", {
+            hour: "2-digit",
+            minute: "2-digit",
+          }).format(new Date());
+        } catch (error) {
+          weatherDescEl.textContent = "Weather unavailable";
+        }
+      }
+
+      function quakeCard(quake) {
+        const time = quake.time ? formatDateTime(new Date(quake.time)) : "--";
+        const hypo = quake.earthquake?.hypocenter?.name || "--";
+        const magnitude = quake.earthquake?.hypocenter?.magnitude ?? "--";
+        const maxScale = quake.earthquake?.maxScale ?? "--";
+
+        return `
+          <div class="bg-black/60 rounded-xl p-3">
+            <p class="text-dim text-xs">${time}</p>
+            <p class="text-lg">${hypo}</p>
+            <div class="mt-1 flex items-center justify-between text-sm">
+              <span>Max: ${maxScale}</span>
+              <span>M ${magnitude}</span>
+            </div>
+          </div>
+        `;
+      }
+
+      async function fetchQuakes() {
+        try {
+          // P2P地震情報APIから取得
+          const response = await fetch(QUAKE_ENDPOINT);
+          if (!response.ok) throw new Error("Quake fetch failed");
+          const data = await response.json();
+          quakeListEl.innerHTML = data.map(quakeCard).join("");
+          quakeUpdatedEl.textContent = new Intl.DateTimeFormat("ja-JP", {
+            hour: "2-digit",
+            minute: "2-digit",
+          }).format(new Date());
+        } catch (error) {
+          quakeListEl.innerHTML = '<p class="text-dim">Earthquake feed unavailable.</p>';
+        }
+      }
+
+      function newsCard(item) {
+        const date = item.pubDate ? formatDateTime(new Date(item.pubDate)) : "--";
+        const link = item.link || "#";
+        return `
+          <article class="bg-black/60 rounded-xl p-4 flex flex-col gap-3">
+            <div class="flex items-start justify-between gap-3">
+              <h3 class="font-display text-lg leading-tight">${item.title}</h3>
+              <div class="w-12 h-12 bg-black/70 border border-panelBorder rounded-lg flex items-center justify-center text-xs text-dim">
+                QR
+              </div>
+            </div>
+            <p class="text-dim text-sm max-h-16 overflow-hidden">${item.description || ""}</p>
+            <div class="text-xs text-dim flex items-center justify-between">
+              <span>${date}</span>
+              <a class="text-accent" href="${link}" target="_blank" rel="noopener">Open</a>
+            </div>
+          </article>
+        `;
+      }
+
+      async function fetchNews() {
+        try {
+          // RSSをrss2json経由で取得（CORS回避）
+          const response = await fetch(RSS2JSON(NHK_RSS));
+          if (!response.ok) throw new Error("News fetch failed");
+          const data = await response.json();
+          const items = (data.items || []).slice(0, 6).map((item) => ({
+            title: item.title,
+            description: item.description?.replace(/<[^>]+>/g, ""),
+            pubDate: item.pubDate,
+            link: item.link,
+          }));
+          newsListEl.innerHTML = items.length ? items.map(newsCard).join("") : fallbackNews.map(newsCard).join("");
+          newsUpdatedEl.textContent = new Intl.DateTimeFormat("ja-JP", {
+            hour: "2-digit",
+            minute: "2-digit",
+          }).format(new Date());
+        } catch (error) {
+          newsListEl.innerHTML = fallbackNews.map(newsCard).join("");
+        }
+      }
+
+      function init() {
+        locationEl.textContent = LOCATION.name;
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        fetchWeather();
+        fetchNews();
+        fetchQuakes();
+
+        // 1時間ごとに自動更新
+        setInterval(fetchWeather, 60 * 60 * 1000);
+        setInterval(fetchNews, 30 * 60 * 1000);
+        setInterval(fetchQuakes, 10 * 60 * 1000);
+      }
+
+      init();
+    </script>
+  </body>
+</html>
