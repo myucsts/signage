@@ -27,21 +27,21 @@
       };
     </script>
   </head>
-  <body class="bg-black text-white font-ui min-h-screen">
-    <div class="w-full max-w-none mx-auto px-8 py-4 h-[360px] aspect-[16/3]">
-      <header class="mb-4 md:mb-6">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div class="bg-panel border border-panelBorder rounded-2xl p-5 flex items-center justify-between">
+  <body class="bg-black text-white font-ui h-screen overflow-hidden flex items-center justify-center">
+    <div class="w-[1920px] h-[360px] mx-auto px-8 py-4 overflow-hidden">
+      <header class="mb-3">
+        <div class="grid grid-cols-3 gap-4 h-[132px]">
+          <div class="bg-panel border border-panelBorder rounded-2xl p-5 flex items-center justify-between h-full">
             <div>
               <p class="text-dim text-sm uppercase tracking-widest">Now</p>
-              <p id="date" class="text-lg md:text-xl"></p>
+              <p id="date" class="text-xl"></p>
             </div>
             <div class="text-right">
-              <p id="time" class="font-display text-4xl md:text-6xl tracking-wider"></p>
+              <p id="time" class="font-display text-6xl tracking-wider"></p>
               <p id="timezone" class="text-dim text-sm"></p>
             </div>
           </div>
-          <div class="bg-panel border border-panelBorder rounded-2xl p-5 flex items-center justify-between">
+          <div class="bg-panel border border-panelBorder rounded-2xl p-5 flex items-center justify-between h-full">
             <div>
               <p class="text-dim text-sm uppercase tracking-widest">Weather</p>
               <div class="flex items-center gap-3 mt-2">
@@ -58,7 +58,7 @@
               <p id="location" class="text-dim text-xs mt-1">Tokyo</p>
             </div>
           </div>
-          <div class="bg-panel border border-panelBorder rounded-2xl p-5">
+          <div class="bg-panel border border-panelBorder rounded-2xl p-5 h-full">
             <div class="flex items-center justify-between">
               <div>
                 <p class="text-dim text-sm uppercase tracking-widest">Earthquake</p>
@@ -66,53 +66,29 @@
               </div>
               <span class="text-dim text-sm">P2P</span>
             </div>
-            <div id="quake-list" class="mt-3 space-y-2 text-sm"></div>
+            <div id="quake-list" class="mt-2 space-y-1 text-xs"></div>
           </div>
         </div>
       </header>
 
-      <main class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-        <section class="lg:col-span-2 bg-panel border border-panelBorder rounded-2xl p-5">
-          <div class="flex items-center justify-between">
-            <h2 class="font-display text-2xl">Weather Outlook</h2>
-            <span class="text-dim text-sm">Open-Meteo</span>
-          </div>
-          <div class="mt-4 bg-black/60 rounded-xl p-4">
-            <p class="text-dim text-sm">Next 12 Hours (3h)</p>
-            <div id="forecast" class="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm"></div>
-          </div>
-        </section>
-
-        <section class="bg-panel border border-panelBorder rounded-2xl p-5">
-          <div class="flex items-center justify-between">
-            <h2 class="font-display text-2xl">Status</h2>
-          </div>
-          <div class="mt-3 grid grid-cols-2 gap-3 text-sm">
-            <div class="bg-black/60 rounded-xl p-3">
-              <p class="text-dim">Weather Update</p>
-              <p id="weather-updated" class="font-display text-lg">--:--</p>
-            </div>
-            <div class="bg-black/60 rounded-xl p-3">
-              <p class="text-dim">News Update</p>
-              <p id="news-updated" class="font-display text-lg">--:--</p>
-            </div>
-            <div class="bg-black/60 rounded-xl p-3">
-              <p class="text-dim">Quake Update</p>
-              <p id="quake-updated" class="font-display text-lg">--:--</p>
-            </div>
-            <div class="bg-black/60 rounded-xl p-3">
-              <p class="text-dim">Timezone</p>
-              <p class="text-sm" id="timezone-compact">--</p>
-            </div>
-          </div>
-        </section>
-
-        <section class="lg:col-span-3 bg-panel border border-panelBorder rounded-2xl p-5">
+      <main class="grid grid-cols-3 gap-4 h-[184px]">
+        <section class="col-span-2 bg-panel border border-panelBorder rounded-2xl p-5 h-full">
           <div class="flex items-center justify-between">
             <h2 class="font-display text-2xl">News</h2>
             <span class="text-dim text-sm">NHK Feed</span>
           </div>
-          <div id="news-list" class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+          <div id="news-list" class="mt-3 grid grid-cols-2 gap-3 overflow-hidden"></div>
+        </section>
+
+        <section class="bg-panel border border-panelBorder rounded-2xl p-5 h-full">
+          <div class="flex items-center justify-between">
+            <h2 class="font-display text-2xl">Weather Outlook</h2>
+            <span class="text-dim text-sm">Open-Meteo</span>
+          </div>
+          <div class="mt-3 bg-black/60 rounded-xl p-3 h-[110px]">
+            <p class="text-dim text-sm">Next 12 Hours (3h)</p>
+            <div id="forecast" class="mt-2 grid grid-cols-2 gap-2 text-sm"></div>
+          </div>
         </section>
       </main>
     </div>
@@ -183,11 +159,7 @@
       const timeEl = document.getElementById("time");
       const dateEl = document.getElementById("date");
       const timezoneEl = document.getElementById("timezone");
-      const timezoneCompactEl = document.getElementById("timezone-compact");
       const locationEl = document.getElementById("location");
-      const weatherUpdatedEl = document.getElementById("weather-updated");
-      const newsUpdatedEl = document.getElementById("news-updated");
-      const quakeUpdatedEl = document.getElementById("quake-updated");
 
       const weatherIconEl = document.getElementById("weather-icon");
       const weatherTempEl = document.getElementById("weather-temp");
@@ -229,7 +201,6 @@
         dateEl.textContent = date;
         const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         timezoneEl.textContent = zone;
-        timezoneCompactEl.textContent = zone;
       }
 
       function toLocalTimeLabel(isoString) {
@@ -282,10 +253,6 @@
             forecastEl.appendChild(item);
           }
 
-          weatherUpdatedEl.textContent = new Intl.DateTimeFormat("ja-JP", {
-            hour: "2-digit",
-            minute: "2-digit",
-          }).format(new Date());
         } catch (error) {
           weatherDescEl.textContent = "Weather unavailable";
         }
@@ -298,10 +265,10 @@
         const maxScale = quake.earthquake?.maxScale ?? "--";
 
         return `
-          <div class="bg-black/60 rounded-xl p-3">
-            <p class="text-dim text-xs">${time}</p>
-            <p class="text-lg">${hypo}</p>
-            <div class="mt-1 flex items-center justify-between text-sm">
+          <div class="bg-black/60 rounded-lg px-2 py-1.5">
+            <p class="text-dim text-[10px]">${time}</p>
+            <p class="text-sm leading-tight">${hypo}</p>
+            <div class="mt-0.5 flex items-center justify-between text-[11px]">
               <span>Max: ${maxScale}</span>
               <span>M ${magnitude}</span>
             </div>
@@ -316,10 +283,6 @@
           if (!response.ok) throw new Error("Quake fetch failed");
           const data = await response.json();
           quakeListEl.innerHTML = data.map(quakeCard).join("");
-          quakeUpdatedEl.textContent = new Intl.DateTimeFormat("ja-JP", {
-            hour: "2-digit",
-            minute: "2-digit",
-          }).format(new Date());
         } catch (error) {
           quakeListEl.innerHTML = '<p class="text-dim">Earthquake feed unavailable.</p>';
         }
@@ -329,15 +292,15 @@
         const date = item.pubDate ? formatDateTime(new Date(item.pubDate)) : "--";
         const link = item.link || "#";
         return `
-          <article class="bg-black/60 rounded-xl p-4 flex flex-col gap-3">
-            <div class="flex items-start justify-between gap-3">
-              <h3 class="font-display text-lg leading-tight">${item.title}</h3>
-              <div class="w-12 h-12 bg-black/70 border border-panelBorder rounded-lg flex items-center justify-center text-xs text-dim">
+          <article class="bg-black/60 rounded-xl p-3 flex flex-col gap-2">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-display text-base leading-snug">${item.title}</h3>
+              <div class="w-10 h-10 bg-black/70 border border-panelBorder rounded-lg flex items-center justify-center text-[10px] text-dim">
                 QR
               </div>
             </div>
-            <p class="text-dim text-sm max-h-16 overflow-hidden">${item.description || ""}</p>
-            <div class="text-xs text-dim flex items-center justify-between">
+            <p class="text-dim text-xs max-h-10 overflow-hidden">${item.description || ""}</p>
+            <div class="text-[11px] text-dim flex items-center justify-between">
               <span>${date}</span>
               <a class="text-accent" href="${link}" target="_blank" rel="noopener">Open</a>
             </div>
@@ -351,17 +314,13 @@
           const response = await fetch(RSS2JSON(NHK_RSS));
           if (!response.ok) throw new Error("News fetch failed");
           const data = await response.json();
-          const items = (data.items || []).slice(0, 6).map((item) => ({
+          const items = (data.items || []).slice(0, 4).map((item) => ({
             title: item.title,
             description: item.description?.replace(/<[^>]+>/g, ""),
             pubDate: item.pubDate,
             link: item.link,
           }));
           newsListEl.innerHTML = items.length ? items.map(newsCard).join("") : fallbackNews.map(newsCard).join("");
-          newsUpdatedEl.textContent = new Intl.DateTimeFormat("ja-JP", {
-            hour: "2-digit",
-            minute: "2-digit",
-          }).format(new Date());
         } catch (error) {
           newsListEl.innerHTML = fallbackNews.map(newsCard).join("");
         }
